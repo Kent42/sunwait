@@ -1,6 +1,10 @@
 /* copyright 2000,2004 Daniel Risacher */
 /* minor changes courtesy Dr. David M. MacMillan */
+/* 2016-10-29 Kent Munro - Added -n option to not sleep
+              but rather show when it would have slept until
+
 /* Licensed under the Gnu General Public License */
+
 #include <stdio.h>
 #include <stdlib.h> 
 #include <math.h>
@@ -71,6 +75,8 @@ void print_usage()
   fprintf(f, "         -z changes the printout to Universal Coordinated Time (UTC)\n");
   fprintf(f, "         -V prints the version number\n");
   fprintf(f, "         -v increases verbosity\n");
+  /* Added following line in 2016-10-29 Revision */ 
+  fprintf(f, "         -n show time would have resumed instead of sleeping\n");
   fprintf(f, "\nThese options are useful mainly when used with the '-p' option\n");
   fprintf(f, "         -y YYYY sets the year to calculate for\n");
   fprintf(f, "         -m MM sets the month to calculate for\n");
@@ -97,8 +103,9 @@ int main(int argc, char *argv[])
   int offset_min = 0;
   int offset_sec = 0;
   int verbose = 0;
+  int nosleep = 0; /* Added line in 2016-10-29 Revision */
 
-  time_t tt;
+  time_t tt, tn; /* Added variable tn in 2016-10-29 Revision */
   struct tm *tm;
 
   tt = time(NULL);
@@ -129,6 +136,12 @@ int main(int argc, char *argv[])
     if (!strcmp("-p", argv[i])) {
       mode = MODE_PRINT;
     }
+
+  /* Added the following section in 2016-10-29 Revision */ 
+    if (!strcmp("-n", argv[i])) {
+      nosleep++;
+    }
+  /* End 2016-10-29 Revision */
 
     if (!strcmp("-y", argv[i])) {
       i++;
@@ -192,7 +205,8 @@ int main(int argc, char *argv[])
   }
 
   if (coords_set != (LAT_SET | LON_SET)) {
-      fprintf(stderr, "warning: latitude or longitude not set\n\tdefault coords of Alexandria, Virgina, USA used\n");
+  /* Fixed typo Virgina to Virginia in 2016-10-29 Revision */ 
+      fprintf(stderr, "warning: latitude or longitude not set\n\tdefault coords of Alexandria, Virginia, USA used\n");
   }
 
   if (verbose > 1) 
@@ -261,8 +275,18 @@ int main(int argc, char *argv[])
     if (0 < verbose) {
       fprintf(stdout, "%f seconds in the interval\n", 3600*interval);
     }
-    
-    sleep((unsigned int)(interval*3600.0));
+  /* Added the following section in 2016-10-29 Revision */ 
+    if (0 < nosleep) {
+      tn = time(NULL) + (interval * 3600);
+      printf("%s", ctime(&tn));
+    } else {
+      sleep((unsigned int)(interval*3600.0));
+    }
+  /* End 2016-10-29 Revision */
+     
+  /* Removed the following line in 2016-10-29 Revision 
+    sleep((unsigned int)(interval*3600.0)); */
+
   } /* normal wait mode */
   
   if (MODE_PRINT == (MODE_MASK & mode))
